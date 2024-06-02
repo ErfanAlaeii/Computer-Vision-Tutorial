@@ -3,92 +3,92 @@ import cvzone
 from cvzone.FaceMeshModule import FaceMeshDetector
 from cvzone.PlotModule import LivePlot
 
-# Initialize the video capture (use 0 for webcam or the file path for a video file)
-cap = cv2.VideoCapture(0)  # Change 0 to the path of your video file if needed
+# Capture video from the webcam
+cap = cv2.VideoCapture(0)
 
-# Initialize the face mesh detector
+# Initialize the face mesh detector and live plot
 detector = FaceMeshDetector(maxFaces=1)
+plotY = LivePlot(640, 480, [20, 50], invert=True)
 
-# Initialize the plot for displaying blink count over time
-plotY = LivePlot(yLimit=[20, 50])
+# List of facial landmark IDs for the eyes
+idlist = [22, 23, 24, 26, 110, 157, 158, 159, 160, 161, 130, 243]
 
-# Blink variables
-blinkCount = 0
-blinkThreshold = 30  # Adjust the threshold based on testing
-blinkFrameCount = 0
+# Initialize variables for blink detection
 ratioList = []
-
-# List of landmark IDs for left eye (example set, adjust as needed)
-leftEyeIDs = [159, 23, 130, 243, 27, 130]
+blinkCount = 0
+blinkThreshold = 30
+blinkFrameCount = 0
+color = 0
 
 while True:
-
-    # Check if the video has ended, and if so, restart it
+    # Reset the video frame position if at the end
     if cap.get(cv2.CAP_PROP_POS_FRAMES) == cap.get(cv2.CAP_PROP_FRAME_COUNT):
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    # Capture frame-by-frame
-    success, frame = cap.read()
+    ret, frame = cap.read()
 
-    # Detect face mesh
+    # Detect face mesh in the frame
     frame, faces = detector.findFaceMesh(frame, draw=False)
-    frame = cv2.resize(frame, (640, 480))  # Resize frame for better display
 
     if faces:
         face = faces[0]
 
-        # Extract left eye landmarks
-        leftEyePoints = [face[i] for i in leftEyeIDs]
+        # for i in range(0, len(faces[0])):
+        #     cv2.putText(frame, str(i), (faces[0][i][0], faces[0][i][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.2,
+        #                 (0, 0, 255), 1, cv2.LINE_AA)
 
-        # Calculate vertical and horizontal distances
-        leftUp = leftEyePoints[0]
-        leftDown = leftEyePoints[1]
-        leftLeft = leftEyePoints[2]
-        leftRight = leftEyePoints[3]
+        # Draw circles on the eye landmarks
+        for id in idlist:
+            cv2.circle(frame, face[id], 3, (0, 255, 255), -1)
 
-        lengthVer, _ = detector.findDistance(leftUp, leftDown)
-        lengthHor, _ = detector.findDistance(leftLeft, leftRight)
+        # Calculate vertical and horizontal distances across the eye
+        leftUp = face[159]
+        leftDown = face[23]
+        leftLeft = face[130]
+        leftRight = face[243]
+        lenghtVer, _ = detector.findDistance(leftUp, leftDown)
+        lenghtHor, _ = detector.findDistance(leftLeft, leftRight)
+        cv2.line(frame, leftUp, leftDown, (0, 255, 0), 3)
+        cv2.line(frame, leftLeft, leftRight, (0, 200, 0), 3)
 
-        # Calculate the ratio of vertical to horizontal distances
-        ratio = int((lengthVer / lengthHor) * 100)
+        # print(int((lenghtVer/lenghtHor)*100))
+
+        # Calculate the eye aspect ratio
+        ratio = int((lenghtVer / lenghtHor) * 100)
         ratioList.append(ratio)
-
-        # Maintain a list of the last three ratios
         if len(ratioList) > 3:
             ratioList.pop(0)
-
-        # Calculate the average ratio
         ratioAvg = sum(ratioList) / len(ratioList)
 
-        # Detect blinks based on the ratio average and threshold
+        # Detect blinks based on the average ratio
         if ratioAvg < blinkThreshold:
             blinkFrameCount += 1
+            color = (0, 255, 0)
         else:
             if blinkFrameCount > 0:
                 blinkCount += 1
                 blinkFrameCount = 0
+                color = (255, 0, 255)
 
-        # Draw circles at each left eye landmark
-        for point in leftEyePoints:
-            cv2.circle(frame, point, 5, (255, 0, 0), -1)
+        # Display the blink count
+        cvzone.putTextRect(frame, f"blinkCount:{blinkCount}", (50, 100), scale=2, thickness=2, colorR=color)
 
-        # Display the blink count on the frame
-        cvzone.putTextRect(frame, f'Blink Count: {blinkCount}', (50, 100), scale=2, thickness=2, colorR=(255, 0, 255))
+        # Update and display the plot with the ratio
+        imgPlot = plotY.update(ratioAvg, color=color)
 
-        # Update and display the plot of the ratio average
-        imgPlot = plotY.update(ratioAvg)
+        # Resize and stack the frames
+        frame = cv2.resize(frame, (640, 480))
+        imgStack = cvzone.stackImages([imgPlot, frame], 2, 1)
 
-        # Stack the frame and plot images side by side
-        imgStack = cvzone.stackImages([frame, imgPlot], 2, 1)
-        cv2.imshow("Image", imgStack)
     else:
-        # Display the frame if no faces are detected
-        cv2.imshow("Image", frame)
+        # If no face is detected, stack the frame twice
+        frame = cv2.resize(frame, (640, 480))
+        imgStack = cvzone.stackImages([frame, frame], 2, 1)
 
-    # Break the loop on 'Esc' key press
-    if cv2.waitKey(1) & 0xFF == 27:
+    # Show the stacked images
+    cv2.imshow("frame", imgStack)
+    if cv2.waitKey(25) & 0xFF == 27:
         break
 
-# Release the capture and close windows
-cap.release()
+# Clean up and close windows
 cv2.destroyAllWindows()
