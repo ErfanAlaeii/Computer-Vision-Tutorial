@@ -1,4 +1,4 @@
-م
+
 
 ---
 
@@ -46,3 +46,29 @@ If you want to customize the configuration of the YOLOv8 model, you can do so by
 
 Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
 
+
+The input format for detecting objects should be as follows:
+
+dataset.location/
+│
+├── data.yaml
+├── README.dataset.txt
+├── README.roboflow.txt
+├── train/
+│   ├── images/
+│   │   ├── image1.jpg
+│   │   ├── image2.jpg
+│   │   └── ...
+│   └── labels/
+│       ├── image1.txt
+│       ├── image2.txt
+│       └── ...
+└── valid/
+    ├── images/
+    │   ├── image1.jpg
+    │   ├── image2.jpg
+    │   └── ...
+    └── labels/
+        ├── image1.txt
+        ├── image2.txt
+        └── ...
