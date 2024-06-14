@@ -1,6 +1,5 @@
 
 
-<<<<<<< HEAD
 # Computer-Vision-Tutorial
 
 Welcome to the **Computer-Vision-Tutorial** repository! This repository contains tutorials and examples for various computer vision techniques and applications using popular libraries such as OpenCV, TensorFlow, and PyTorch.
