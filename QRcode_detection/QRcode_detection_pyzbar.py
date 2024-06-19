@@ -120,6 +120,6 @@ if __name__ == "__main__":
 
 # Example usage:
 # You can run this script with the following commands in the terminal:
-# python QRcode_detection_pyzbar.py -m image -f example.png
-# python QRcode_detection_pyzbar.py -m video -f example.mp4
-# python QRcode_detection_pyzbar.py -m webcam
+# python script_name.py -m image -f example.png
+# python script_name.py-m video -f example.mp4
+# python script_name.py -m webcam
